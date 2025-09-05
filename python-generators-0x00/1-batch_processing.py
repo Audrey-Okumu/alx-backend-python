@@ -21,20 +21,24 @@ def stream_users_in_batches(batch_size):
     for row in cursor:          # Loop 1: iterate over all rows
         batch.append(row)
         if len(batch) == batch_size:
-            yield batch        # Yield a batch of rows as a generator
+            yield batch        # Yield a batch of rows
             batch = []
     
     if batch:
-        yield batch            # Yield remaining rows
+        yield batch            # Yield any remaining rows
+
+    # Stop the generator explicitly (optional)
+    return
     
     cursor.close()
     connection.close()
 
 def batch_processing(batch_size):
     """Processes each batch to filter users over 25"""
-    # Loop over batches from the generator
-    for batch in stream_users_in_batches(batch_size):   # Loop 2
-        # Loop inside each batch
-        for user in batch:                              # Loop 3
+    for batch in stream_users_in_batches(batch_size):   # Loop 2: iterate over batches
+        for user in batch:                              # Loop 3: iterate inside batch
             if user['age'] > 25:
                 yield user  # Yield each filtered user one by one
+    
+    # Stop the generator safely (optional)
+    return
