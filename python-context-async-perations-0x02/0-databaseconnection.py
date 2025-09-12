@@ -17,10 +17,19 @@ class DatabaseConnection:
         return self.cursor
 
     def __exit__(self, exc_type, exc_value, traceback):
-        """Commit changes (if any) and close the connection"""
+        """Commit changes (if no exception), rollback otherwise, then close"""
         if self.conn:
-            if exc_type is None:  # no exception
+            if exc_type is None:
                 self.conn.commit()
             else:
                 self.conn.rollback()
             self.conn.close()
+
+
+if __name__ == "__main__":
+    # Use the custom context manager with a SELECT query
+    with DatabaseConnection("test.db") as cursor:
+        cursor.execute("SELECT * FROM users")
+        rows = cursor.fetchall()
+        for row in rows:
+            print(row)
