@@ -32,7 +32,7 @@ Each topic is explained separately below.
 
 
 
-Context Managers
+# 2️⃣Context Managers
 ### 🔹 What They Are
 
 A context manager handles setup and cleanup actions automatically (e.g., opening/closing a file).
