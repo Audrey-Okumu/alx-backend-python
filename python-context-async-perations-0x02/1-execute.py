@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Custom class-based context manager for executing queries
 """
