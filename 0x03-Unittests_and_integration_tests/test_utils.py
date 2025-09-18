@@ -34,7 +34,7 @@ class TestAccessNestedMap(unittest.TestCase):
 class TestGetJson(unittest.TestCase):
     """Unit tests for utils.get_json"""
 
-    @patch("utils.requests.get")
+    @patch("utils.get_json.requests.get")
     def test_get_json(self, mock_get):
         """Test get_json returns the expected payload"""
         test_cases = [
