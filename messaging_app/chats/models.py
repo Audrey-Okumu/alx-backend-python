@@ -1,7 +1,7 @@
 from django.db import models
 import uuid
-from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
+from django.contrib.auth.models import AbstractUser, Group, Permission
 
 # Create your models here.
 
@@ -16,15 +16,30 @@ class User(AbstractUser):
     email = models.EmailField(unique=True, null=False)
     password_hash = models.CharField(max_length=255, null=False)
     phone_number = models.CharField(max_length=20, null=True, blank=True)
-    
+
     ROLE_CHOICES = [
         ('guest', 'Guest'),
         ('host', 'Host'),
         ('admin', 'Admin'),
     ]
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='guest', null=False)
-    
     created_at = models.DateTimeField(default=timezone.now)
+
+    # Fix reverse accessor conflicts
+    groups = models.ManyToManyField(
+        Group,
+        related_name='chats_user_set',
+        blank=True,
+        help_text='The groups this user belongs to.',
+        verbose_name='groups'
+    )
+    user_permissions = models.ManyToManyField(
+        Permission,
+        related_name='chats_user_permissions_set',
+        blank=True,
+        help_text='Specific permissions for this user.',
+        verbose_name='user permissions'
+    )
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
