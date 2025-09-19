@@ -53,6 +53,18 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# Django REST Framework global settings
+REST_FRAMEWORK = {
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",  # Require login by default
+    ],
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",  # For browsable API
+        "rest_framework.authentication.BasicAuthentication",    # Optional: username/password
+    ],
+}
+
+
 ROOT_URLCONF = 'messaging_app.urls'
 
 TEMPLATES = [
