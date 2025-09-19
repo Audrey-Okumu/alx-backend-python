@@ -1,21 +1,15 @@
-from django.shortcuts import render
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, filters
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from .models import User, Conversation, Message
 from .serializers import UserSerializer, ConversationSerializer, MessageSerializer
 
-
-# Create your views here.
-
-# -------------------------------
-# Conversation ViewSet
-# -------------------------------
 class ConversationViewSet(viewsets.ModelViewSet):
     queryset = Conversation.objects.all()
     serializer_class = ConversationSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['participants__first_name', 'participants__last_name']
 
-    # Custom action to create a conversation with participants
     @action(detail=False, methods=['post'])
     def create_conversation(self, request):
         participants_ids = request.data.get('participants', [])
@@ -30,14 +24,12 @@ class ConversationViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-# -------------------------------
-# Message ViewSet
-# -------------------------------
 class MessageViewSet(viewsets.ModelViewSet):
     queryset = Message.objects.all()
     serializer_class = MessageSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['message_body', 'sender__first_name', 'sender__last_name']
 
-    # Custom action to send a message to a conversation
     @action(detail=False, methods=['post'])
     def send_message(self, request):
         conversation_id = request.data.get('conversation_id')
