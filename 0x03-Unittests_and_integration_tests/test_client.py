@@ -73,8 +73,6 @@ class TestGithubOrgClient(unittest.TestCase):
     }
 ])
 class TestIntegrationGithubOrgClient(unittest.TestCase):
-
-class TestIntegrationGithubOrgClient(unittest.TestCase):
     """Integration tests for GithubOrgClient.public_repos"""
 
     @classmethod
@@ -86,7 +84,7 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
         def side_effect(url):
             if url == "https://api.github.com/orgs/test":
                 return MockResponse(cls.org_payload)
-            if url == cls.org_payload["repos_url"]:
+            elif url == cls.org_payload.get("repos_url"):
                 return MockResponse(cls.repos_payload)
             return None
 
