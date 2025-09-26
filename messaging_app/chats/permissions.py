@@ -1,7 +1,6 @@
+from rest_framework import permissions
 
-from rest_framework.permissions import BasePermission
-
-class IsOwnerOrParticipant(BasePermission):
+class IsOwnerOrParticipant(permissions.BasePermission):
     """
     Allow access only if the requesting user is the owner/participant
     of the conversation or message.
