@@ -1,3 +1,7 @@
+from django_filters.rest_framework import DjangoFilterBackend
+from .pagination import MessagePagination
+from .filters import MessageFilter
+
 from rest_framework import viewsets, status, filters
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -35,7 +39,9 @@ class ConversationViewSet(viewsets.ModelViewSet):
 class MessageViewSet(viewsets.ModelViewSet):
     serializer_class = MessageSerializer
     permission_classes = [IsAuthenticated, IsParticipantOfConversation]
-    filter_backends = [filters.SearchFilter]
+    pagination_class = MessagePagination
+    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
+    filterset_class = MessageFilter
     search_fields = ['message_body', 'sender__first_name', 'sender__last_name']
 
     def get_queryset(self):
@@ -58,13 +64,16 @@ class MessageViewSet(viewsets.ModelViewSet):
             conversation = Conversation.objects.get(conversation_id=conversation_id)
             sender = User.objects.get(user_id=sender_id)
         except (Conversation.DoesNotExist, User.DoesNotExist):
-            return Response({"error": "Invalid conversation_id or sender_id."},
-                            status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Invalid conversation_id or sender_id."},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
-        # Permission check: sender must be a participant of the conversation
         if request.user not in conversation.participants.all():
-            return Response({"error": "You are not a participant of this conversation."},
-                            status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"error": "You are not a participant of this conversation."},
+                status=status.HTTP_403_FORBIDDEN
+            )
 
         message = Message.objects.create(
             sender=sender,
