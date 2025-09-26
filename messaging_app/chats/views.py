@@ -3,12 +3,18 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from .models import User, Conversation, Message
 from .serializers import UserSerializer, ConversationSerializer, MessageSerializer
+from .permissions import IsParticipantOfConversation
+
 
 class ConversationViewSet(viewsets.ModelViewSet):
-    queryset = Conversation.objects.all()
     serializer_class = ConversationSerializer
+    permission_classes = [IsParticipantOfConversation]
     filter_backends = [filters.SearchFilter]
     search_fields = ['participants__first_name', 'participants__last_name']
+
+    def get_queryset(self):
+        # Only return conversations where the request user is a participant
+        return Conversation.objects.filter(participants=self.request.user)
 
     @action(detail=False, methods=['post'])
     def create_conversation(self, request):
@@ -25,10 +31,14 @@ class ConversationViewSet(viewsets.ModelViewSet):
 
 
 class MessageViewSet(viewsets.ModelViewSet):
-    queryset = Message.objects.all()
     serializer_class = MessageSerializer
+    permission_classes = [IsParticipantOfConversation]
     filter_backends = [filters.SearchFilter]
     search_fields = ['message_body', 'sender__first_name', 'sender__last_name']
+
+    def get_queryset(self):
+        # Only return messages from conversations where the request user is a participant
+        return Message.objects.filter(conversation__participants=self.request.user)
 
     @action(detail=False, methods=['post'])
     def send_message(self, request):
@@ -48,6 +58,11 @@ class MessageViewSet(viewsets.ModelViewSet):
         except (Conversation.DoesNotExist, User.DoesNotExist):
             return Response({"error": "Invalid conversation_id or sender_id."},
                             status=status.HTTP_404_NOT_FOUND)
+
+        # Permission check: sender must be a participant of the conversation
+        if request.user not in conversation.participants.all():
+            return Response({"error": "You are not a participant of this conversation."},
+                            status=status.HTTP_403_FORBIDDEN)
 
         message = Message.objects.create(
             sender=sender,
