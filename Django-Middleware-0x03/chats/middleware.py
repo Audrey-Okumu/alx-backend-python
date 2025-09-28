@@ -77,3 +77,26 @@ class OffensiveLanguageMiddleware:
         else:
             ip = request.META.get('REMOTE_ADDR')
         return ip
+    
+
+class RolePermissionMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        # Only enforce permissions if user is authenticated
+        if request.user.is_authenticated:
+            # Example: assuming you have a "role" field on the User model
+            user_role = getattr(request.user, "role", None)
+
+            # Allow only admins or moderators
+            if user_role not in ["admin", "moderator"]:
+                return JsonResponse(
+                    {"error": "Forbidden: insufficient permissions"},
+                    status=403
+                )
+
+        # Continue if authenticated & role is allowed OR user is not logged in
+        response = self.get_response(request)
+        return response
+
