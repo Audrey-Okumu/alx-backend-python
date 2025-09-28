@@ -49,23 +49,20 @@ class MessageViewSet(viewsets.ModelViewSet):
         return Message.objects.filter(conversation__participants=self.request.user)
 
     @action(detail=False, methods=['post'])
-    def send_message(self, request):
-        conversation_id = request.data.get('conversation_id')
-        sender_id = request.data.get('sender_id')
+    def send_message(self, request, conversation_pk=None, *args, **kwargs):
         message_body = request.data.get('message_body')
 
-        if not all([conversation_id, sender_id, message_body]):
+        if not message_body:
             return Response(
-                {"error": "conversation_id, sender_id and message_body are required."},
+                {"error": "message_body is required."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         try:
-            conversation = Conversation.objects.get(conversation_id=conversation_id)
-            sender = User.objects.get(user_id=sender_id)
-        except (Conversation.DoesNotExist, User.DoesNotExist):
+            conversation = Conversation.objects.get(pk=conversation_pk)
+        except Conversation.DoesNotExist:
             return Response(
-                {"error": "Invalid conversation_id or sender_id."},
+                {"error": "Conversation not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
@@ -76,7 +73,7 @@ class MessageViewSet(viewsets.ModelViewSet):
             )
 
         message = Message.objects.create(
-            sender=sender,
+            sender=request.user,  # use the logged-in user
             conversation=conversation,
             message_body=message_body
         )

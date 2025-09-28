@@ -10,11 +10,10 @@ from django.contrib.auth.models import AbstractUser, Group, Permission
 # User Model
 # -------------------------------
 class User(AbstractUser):
-    user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
+    user_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     first_name = models.CharField(max_length=50, null=False)
     last_name = models.CharField(max_length=50, null=False)
     email = models.EmailField(unique=True, null=False)
-    password_hash = models.CharField(max_length=255, null=False)
     phone_number = models.CharField(max_length=20, null=True, blank=True)
 
     ROLE_CHOICES = [
