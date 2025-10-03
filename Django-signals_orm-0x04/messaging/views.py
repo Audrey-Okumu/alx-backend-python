@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
 from .models import Message
 
+
 @login_required
 def delete_user(request):
     """
@@ -14,7 +15,7 @@ def delete_user(request):
 
 
 # -------------------------------
-#  Threaded conversation view
+#  Threaded conversation helpers
 # -------------------------------
 
 def get_thread(message):
@@ -34,6 +35,7 @@ def get_thread(message):
         }
         for reply in replies
     ]
+
 
 @login_required
 def threaded_conversation_view(request, user_id):
@@ -60,4 +62,20 @@ def threaded_conversation_view(request, user_id):
 
     return render(request, "messaging/threaded_conversation.html", {
         "conversation": conversation
+    })
+
+
+# -------------------------------
+#  Unread messages inbox view
+# -------------------------------
+
+@login_required
+def inbox_unread(request):
+    """
+    Show only unread messages for the logged-in user.
+    Uses the custom manager with .only() optimization.
+    """
+    unread_messages = Message.unread.unread_for_user(request.user)
+    return render(request, "messaging/inbox_unread.html", {
+        "messages": unread_messages
     })
