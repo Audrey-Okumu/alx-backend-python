@@ -1,6 +1,22 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+# ------------------------
+# Custom Manager
+# ------------------------
+class UnreadMessagesManager(models.Manager):
+    def for_user(self, user):
+        """
+        Return unread messages for a specific user.
+        Uses `.only()` to optimize by selecting only the needed fields.
+        """
+        return (
+            super().get_queryset()
+            .filter(receiver=user, read=False)
+            .only("id", "sender", "receiver", "content", "timestamp")
+        )
+
+
 class Message(models.Model):
     sender = models.ForeignKey(User, related_name="sent_messages", on_delete=models.CASCADE)
     receiver = models.ForeignKey(User, related_name="received_messages", on_delete=models.CASCADE)
@@ -12,13 +28,20 @@ class Message(models.Model):
         related_name="edited_messages"
     )
 
-    # new field for threaded replies
+    # field for threaded replies
     parent_message = models.ForeignKey(
-        'self',                # self-referential relationship
-        null=True, blank=True, # root messages will have no parent
+        'self',
+        null=True, blank=True,
         on_delete=models.CASCADE,
         related_name="replies"
     )
+
+    #  field for unread messages
+    read = models.BooleanField(default=False)
+
+    # managers
+    objects = models.Manager()  # default manager
+    unread = UnreadMessagesManager()  # custom manager
 
     def __str__(self):
         return f"From {self.sender} to {self.receiver}: {self.content[:20]}"
@@ -35,7 +58,7 @@ class Message(models.Model):
             "timestamp": self.timestamp,
             "replies": []
         }
-        for reply in self.replies.all():   # thanks to related_name="replies"
+        for reply in self.replies.all():
             thread["replies"].append(reply.get_thread())
         return thread
 
