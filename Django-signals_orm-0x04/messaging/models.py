@@ -12,8 +12,33 @@ class Message(models.Model):
         related_name="edited_messages"
     )
 
+    # new field for threaded replies
+    parent_message = models.ForeignKey(
+        'self',                # self-referential relationship
+        null=True, blank=True, # root messages will have no parent
+        on_delete=models.CASCADE,
+        related_name="replies"
+    )
+
     def __str__(self):
         return f"From {self.sender} to {self.receiver}: {self.content[:20]}"
+
+    class Meta:
+        ordering = ["timestamp"]
+
+    # helper method to fetch replies recursively
+    def get_thread(self):
+        thread = {
+            "id": self.id,
+            "content": self.content,
+            "sender": self.sender.username,
+            "timestamp": self.timestamp,
+            "replies": []
+        }
+        for reply in self.replies.all():   # thanks to related_name="replies"
+            thread["replies"].append(reply.get_thread())
+        return thread
+
 
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="notifications")
@@ -23,7 +48,8 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"Notification for {self.user.username} - Message {self.message.id}"
-        
+
+
 class MessageHistory(models.Model):
     message = models.ForeignKey(Message, on_delete=models.CASCADE, related_name="history")
     old_content = models.TextField()
