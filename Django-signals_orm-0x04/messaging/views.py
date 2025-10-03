@@ -1,8 +1,7 @@
-#a simple view that deletes the currently logged-in user.
-
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
+from .models import Message
 
 @login_required
 def delete_user(request):
@@ -12,3 +11,53 @@ def delete_user(request):
     user = request.user
     user.delete()   # triggers post_delete signal
     return redirect('/')  # redirect to homepage after deletion
+
+
+# -------------------------------
+#  Threaded conversation view
+# -------------------------------
+
+def get_thread(message):
+    """
+    Recursive function to fetch all replies to a message
+    and build a threaded structure.
+    """
+    replies = (
+        message.replies.all()
+        .select_related("sender", "receiver", "parent_message")
+        .order_by("timestamp")
+    )
+    return [
+        {
+            "message": reply,
+            "replies": get_thread(reply)  # recursion
+        }
+        for reply in replies
+    ]
+
+@login_required
+def threaded_conversation_view(request, user_id):
+    """
+    Fetch root-level messages between request.user and another user,
+    then recursively fetch their replies in a threaded format.
+    """
+    root_messages = (
+        Message.objects.filter(
+            parent_message__isnull=True,
+            sender=request.user,
+            receiver_id=user_id
+        )
+        .select_related("sender", "receiver")
+        .order_by("timestamp")
+    )
+
+    conversation = []
+    for msg in root_messages:
+        conversation.append({
+            "message": msg,
+            "replies": get_thread(msg)
+        })
+
+    return render(request, "messaging/threaded_conversation.html", {
+        "conversation": conversation
+    })
