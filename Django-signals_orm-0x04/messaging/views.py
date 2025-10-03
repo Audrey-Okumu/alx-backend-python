@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
+from django.views.decorators.cache import cache_page   # import cache_page
 from .models import Message
 
 
@@ -37,7 +38,12 @@ def get_thread(message):
     ]
 
 
+# -------------------------------
+#  Threaded conversation view (with caching)
+# -------------------------------
+
 @login_required
+@cache_page(60)   #  cache this view for 60 seconds
 def threaded_conversation_view(request, user_id):
     """
     Fetch root-level messages between request.user and another user,
