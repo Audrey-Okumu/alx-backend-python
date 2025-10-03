@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
+from django.views.decorators.cache import cache_page   #  added for caching
 from .models import Message
 
 
@@ -38,10 +39,12 @@ def get_thread(message):
 
 
 @login_required
+@cache_page(60)   # cache this view for 60 seconds
 def threaded_conversation_view(request, user_id):
     """
     Fetch root-level messages between request.user and another user,
     then recursively fetch their replies in a threaded format.
+    Cached for 60 seconds.
     """
     root_messages = (
         Message.objects.filter(
@@ -75,7 +78,7 @@ def inbox_unread(request):
     Show only unread messages for the logged-in user.
     Uses the custom manager with .only() optimization.
     """
-    unread_messages = Message.unread.unread_for_user(request.user)
+    unread_messages = Message.unread.for_user(request.user)
     return render(request, "messaging/inbox_unread.html", {
         "messages": unread_messages
     })
