@@ -14,9 +14,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . /app/
 
 # 6. Expose the Django default port
-EXPOSE 8000
+EXPOSE 8000  
+# Run with: docker run -p 8000:8000 messaging_app
 
-# 7. Environment variables (optional but good practice)
+
+# 7. Environment variables 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
