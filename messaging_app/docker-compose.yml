@@ -8,7 +8,7 @@ services:
     env_file:
       - .env
     environment:
-      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_DB=${MYSQL_DB}
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
@@ -36,7 +36,7 @@ services:
       echo '✅ MySQL is ready! Running migrations...' &&
       python manage.py migrate &&
       echo '🚀 Starting Django server...' &&
-      python manage.py runserver 0.0.0.0:8000
+      python3 manage.py runserver 0.0.0.0:8000
       "
     env_file:
       - .env
