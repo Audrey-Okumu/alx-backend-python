@@ -1,4 +1,6 @@
 #!/bin/bash
+
+
 # Script Name: kubctl-0x01
 # Description: Scales Django deployment, checks pods, performs load testing, and monitors resource usage.
 
