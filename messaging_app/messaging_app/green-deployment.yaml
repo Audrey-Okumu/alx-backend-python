@@ -1,22 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: messaging-web-deployment
+  name: messaging-web-green
   labels:
     app: messaging-web
+    version: green
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: messaging-web
+      version: green
   template:
     metadata:
       labels:
         app: messaging-web
+        version: green
     spec:
       containers:
         - name: messaging-web
-          image: messaging_web:latest
+          image: messaging_web:v2   # simulate new version
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
@@ -27,16 +30,3 @@ spec:
               value: "1"
             - name: DJANGO_SETTINGS_MODULE
               value: messaging_app.settings
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: messaging-web-service
-spec:
-  selector:
-    app: messaging-web
-  ports:
-    - protocol: TCP
-      port: 8000
-      targetPort: 8000
-  type: ClusterIP

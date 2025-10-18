@@ -1,0 +1,22 @@
+#!/bin/bash
+# Blue-Green Deployment Automation Script
+
+set -e
+
+echo "🚀 Deploying Blue and Green versions..."
+kubectl apply -f blue_deployment.yaml
+kubectl apply -f green_deployment.yaml
+kubectl apply -f kubeservice.yaml
+
+echo "⏳ Checking pod status..."
+kubectl get pods -l app=messaging-web
+
+echo "📜 Logs for Green Deployment:"
+GREEN_POD=$(kubectl get pods -l version=green -o jsonpath="{.items[0].metadata.name}")
+kubectl logs $GREEN_POD || echo "⚠️ Could not fetch logs for Green pod yet."
+
+echo "🔁 Switching traffic to GREEN version..."
+kubectl patch service messaging-web-service -p '{"spec":{"selector":{"app":"messaging-web","version":"green"}}}'
+
+echo "✅ Traffic successfully switched to GREEN version."
+kubectl get service messaging-web-service -o wide
