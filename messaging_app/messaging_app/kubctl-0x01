@@ -1,0 +1,24 @@
+#!/bin/bash
+# Script Name: kubctl-0x01
+# Description: Scales Django deployment, checks pods, performs load testing, and monitors resource usage.
+
+# Step 1: Scale the deployment to 3 replicas
+echo "Scaling messaging-web-deployment to 3 replicas..."
+kubectl scale deployment messaging-web-deployment --replicas=3
+
+# Step 2: Wait for pods to start
+echo "Waiting for pods to be ready..."
+sleep 10
+
+# Step 3: Check the running pods
+echo "Current pods status:"
+kubectl get pods -l app=messaging-web
+
+# Step 4: Perform load testing using wrk
+echo "Performing load test using wrk..."
+# Replace service name and port with your correct Django service URL (e.g., localhost:8000 if using port forwarding)
+wrk -t4 -c100 -d30s http://localhost:8000/
+
+# Step 5: Monitor resource usage
+echo "Resource usage (pods):"
+kubectl top pods
