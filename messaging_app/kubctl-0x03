@@ -1,0 +1,24 @@
+#!/bin/bash
+
+echo "🔵 Applying rolling update to version 2.0..."
+kubectl apply -f blue_deployment.yaml
+
+echo "⏳ Monitoring rollout status..."
+kubectl rollout status deployment/messaging-web-deployment
+
+echo "✅ Checking current pods:"
+kubectl get pods -o wide
+
+echo "🌐 Testing app availability during rollout..."
+for i in {1..10}
+do
+  curl -s http://localhost:8000 > /dev/null
+  if [ $? -eq 0 ]; then
+    echo "Request $i: ✅ App reachable"
+  else
+    echo "Request $i: ❌ App unreachable"
+  fi
+  sleep 2
+done
+
+echo "✅ Rolling update completed!"
