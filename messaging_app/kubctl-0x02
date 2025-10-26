@@ -8,15 +8,21 @@ kubectl apply -f blue_deployment.yaml
 kubectl apply -f green_deployment.yaml
 kubectl apply -f kubeservice.yaml
 
-echo "⏳ Checking pod status..."
-kubectl get pods -l app=messaging-web
+echo "⏳ Waiting for pods to be ready..."
+kubectl wait --for=condition=available --timeout=120s deployment/messaging-web-blue || echo "⚠️ Blue deployment not ready in time."
+kubectl wait --for=condition=available --timeout=120s deployment/messaging-web-green || echo "⚠️ Green deployment not ready in time."
+
+echo "📋 Current pod status:"
+kubectl get pods -l app=messaging-web -o wide
 
 echo "📜 Logs for Green Deployment:"
-GREEN_POD=$(kubectl get pods -l version=green -o jsonpath="{.items[0].metadata.name}")
-kubectl logs $GREEN_POD || echo "⚠️ Could not fetch logs for Green pod yet."
+GREEN_POD=$(kubectl get pods -l app=messaging-web,version=green -o jsonpath="{.items[0].metadata.name}")
+kubectl logs $GREEN_POD --tail=20 || echo "⚠️ Could not fetch logs for Green pod yet."
 
 echo "🔁 Switching traffic to GREEN version..."
 kubectl patch service messaging-web-service -p '{"spec":{"selector":{"app":"messaging-web","version":"green"}}}'
 
-echo "✅ Traffic successfully switched to GREEN version."
+echo "✅ Traffic successfully switched to GREEN version!"
 kubectl get service messaging-web-service -o wide
+
+echo "🎉 Blue-Green deployment completed successfully."
