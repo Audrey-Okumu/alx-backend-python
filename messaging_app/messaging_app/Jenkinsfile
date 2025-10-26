@@ -5,14 +5,14 @@ pipeline {
         stage('Checkout') {
             steps {
                 echo 'Cloning repository...'
-                git url: 'https://github.com/Audrey-Okumu/alx-backend-python.git', branch: 'main'
+                git url: 'https://github.com/Audrey-Okumu/alx-backend-python.git', branch: 'main', credentialsId: 'github-credentials'
             }
         }
 
         stage('Install dependencies') {
             steps {
                 dir('messaging_app') {
-                    echo 'Installing Python dependencies...'
+                    echo 'Installing dependencies...'
                     sh '''
                         python3 -m venv venv
                         . venv/bin/activate
@@ -26,7 +26,7 @@ pipeline {
         stage('Run tests') {
             steps {
                 dir('messaging_app') {
-                    echo 'Running tests using pytest...'
+                    echo 'Running pytest...'
                     sh '''
                         . venv/bin/activate
                         pytest --maxfail=1 --disable-warnings --junitxml=report.xml
@@ -35,6 +35,7 @@ pipeline {
             }
             post {
                 always {
+                    echo 'Generating test report...'
                     junit 'messaging_app/report.xml'
                 }
             }
@@ -43,10 +44,10 @@ pipeline {
 
     post {
         success {
-            echo 'Pipeline completed successfully!'
+            echo '✅ Pipeline completed successfully.'
         }
         failure {
-            echo 'Pipeline failed. Please check the logs.'
+            echo '❌ Pipeline failed. Please check logs.'
         }
     }
 }
