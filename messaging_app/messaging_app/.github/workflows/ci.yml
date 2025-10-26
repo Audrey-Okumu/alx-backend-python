@@ -2,9 +2,7 @@ name: Django CI
 
 on:
   push:
-    branches: [ main, master ]
   pull_request:
-    branches: [ main, master ]
 
 jobs:
   test:
@@ -12,7 +10,7 @@ jobs:
 
     services:
       mysql:
-        image: mysql:8.0
+        image: mysql:8
         env:
           MYSQL_ROOT_PASSWORD: root
           MYSQL_DATABASE: test_db
@@ -21,48 +19,50 @@ jobs:
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-cmd="mysqladmin ping -h localhost -uroot -proot"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
 
-    env:
-      DJANGO_SETTINGS_MODULE: messaging_app.settings
-      DATABASE_URL: mysql://test_user:test_pass@127.0.0.1:3306/test_db
-
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r messaging_app/requirements.txt
+          pip install flake8 coverage pytest pytest-django
 
-      - name: Wait for MySQL
+      - name: Wait for MySQL to be ready
         run: |
-          sudo apt-get install -y mysql-client
-          until mysqladmin ping -h 127.0.0.1 -u test_user -ptest_pass --silent; do
+          until mysqladmin ping -h 127.0.0.1 -uroot -proot --silent; do
             echo "Waiting for MySQL..."
             sleep 5
           done
 
       - name: Run migrations
         run: |
-          python manage.py migrate
+          python messaging_app/manage.py migrate
 
-      - name: Run tests
+      - name: Run lint check with flake8
         run: |
-          pytest --maxfail=1 --disable-warnings -q --junitxml=test-results.xml
+          flake8 messaging_app --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 messaging_app --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-      - name: Upload test results
-        if: always()
+      - name: Run tests with coverage
+        run: |
+          coverage run -m pytest messaging_app
+          coverage report
+          coverage xml
+
+      - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
-          name: test-results
-          path: test-results.xml
+          name: coverage-report
+          path: coverage.xml
