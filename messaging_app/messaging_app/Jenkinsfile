@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        REPO_URL = 'https://github.com/YOUR_GITHUB_USERNAME/alx-backend-python.git'
+        REPO_URL = 'https://github.com/Audrey-Okumu/alx-backend-python.git'
         APP_DIR = 'messaging_app'
     }
 
