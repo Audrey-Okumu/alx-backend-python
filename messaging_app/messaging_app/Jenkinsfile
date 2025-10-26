@@ -1,51 +1,41 @@
 pipeline {
     agent any
 
-    environment {
-        REPO_URL = 'https://github.com/Audrey-Okumu/alx-backend-python.git'
-        APP_DIR = 'messaging_app'
-    }
-
     stages {
         stage('Checkout') {
             steps {
-                echo '🔄 Cloning repository...'
-                git branch: 'main', url: "${REPO_URL}", credentialsId: 'github-credentials-id'
+                echo 'Cloning repository...'
+                git url: 'https://github.com/Audrey-Okumu/alx-backend-python.git', branch: 'main'
             }
         }
 
-        stage('Set up Python environment') {
+        stage('Install dependencies') {
             steps {
-                dir("${APP_DIR}") {
-                    script {
-                        echo '🐍 Creating virtual environment and installing dependencies...'
-                        sh '''
+                dir('messaging_app') {
+                    echo 'Installing Python dependencies...'
+                    sh '''
                         python3 -m venv venv
                         . venv/bin/activate
                         pip install --upgrade pip
                         pip install -r requirements.txt
-                        '''
-                    }
+                    '''
                 }
             }
         }
 
-        stage('Run Tests with pytest') {
+        stage('Run tests') {
             steps {
-                dir("${APP_DIR}") {
-                    script {
-                        echo '🧪 Running tests...'
-                        sh '''
+                dir('messaging_app') {
+                    echo 'Running tests using pytest...'
+                    sh '''
                         . venv/bin/activate
-                        pytest --maxfail=1 --disable-warnings -q --junitxml=test-results.xml
-                        '''
-                    }
+                        pytest --maxfail=1 --disable-warnings --junitxml=report.xml
+                    '''
                 }
             }
             post {
                 always {
-                    echo '📄 Publishing test report...'
-                    junit '**/test-results.xml'
+                    junit 'messaging_app/report.xml'
                 }
             }
         }
@@ -53,10 +43,10 @@ pipeline {
 
     post {
         success {
-            echo '✅ All tests passed successfully!'
+            echo 'Pipeline completed successfully!'
         }
         failure {
-            echo '❌ Tests failed. Check the Jenkins console log and test report.'
+            echo 'Pipeline failed. Please check the logs.'
         }
     }
 }
